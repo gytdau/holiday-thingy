@@ -49,66 +49,38 @@ def list(message, arguments):
 
         now = start_date
 
-        readable_start = start.strftime("%A, %d %B")
-        readable_end = end.strftime("%A, %d %B")
-        readable_return = (end).strftime("%A, %d %B")
         start_days_offset = (start - now).days
         end_days_offset = (end - now).days
 
-        description = '(' + event['description'] + ')' if 'description' in event else ''
-        attachments = {
-            'end': {
-                'fallback': 'Calendar event',
-                'title': event['summary'],
-                'footer': description,
-                'text': 'Returns from PTO',
-                'color': '#2ECC40'
-            },
-            'oneDay': {
-                'fallback': 'Calendar event',
-                'title': event['summary'],
-                'footer': description,
-                'text': 'On PTO for one day',
-                'color': '#FF851B'
-            },
-            'start': {
-                'fallback': 'Calendar event',
-                'title': event['summary'],
-                'footer': description,
-                'text': 'Starts PTO until they return on ' + readable_return,
-                'color': '#FF4136'
-            },
-            'continue': {
-                'fallback': 'Calendar event',
-                'title': event['summary'],
-                'footer': description,
-                'text': 'Still on PTO from ' + readable_start + ' until they return on ' + readable_return,
-                'color': '#0074D9'
-            }
-        }
-
-
+        full_name = event['summary']
+        description = None
+        if 'description' in event:
+            description = event['description']
 
         if start_days_offset == end_days_offset:
             if start_days_offset < days_in_range:
                 # The one day PTO is within the week.
-                days[start_days_offset].append(attachments['oneDay'])
+                attachment = generate_attachment(full_name, "oneDay", description, start, end)
+                days[start_days_offset].append(attachment)
         else:
             if start_days_offset < 0 and end_days_offset >= 0:
-                continued.append(attachments['continue'])
+                attachment = generate_attachment(full_name, "continue", description, start, end)
+                continued.append(attachment)
+
             elif start_days_offset < days_in_range:
                 # The start is within the week.
-                days[start_days_offset].append(attachments['start'])
-
+                attachment = generate_attachment(full_name, "start", description, start, end)
+                days[start_days_offset].append(attachment)
 
             if end_days_offset < days_in_range:
                 # The end is within the week.
-                days[end_days_offset].append(attachments['end'])
+                attachment = generate_attachment(full_name, "end", description, start, end)
+                days[end_days_offset].append(attachment)
 
     message.send('Here\'s what\'s scheduled from ' + start_date.strftime("%A, %d %B") + " to " + end_date.strftime("%A, %d %B") + ".")
 
     if continued:
-        message.send_attatchments(continued)
+        message.send_attachments(continued)
 
     if not days:
         message.send("Looks like there's no PTOs this week.")
@@ -119,7 +91,7 @@ def list(message, arguments):
 
         message.send((start_date + timedelta(days=dayNumber)).strftime("%A, %d %B") +":\n")
 
-        message.send_attatchments(day)
+        message.send_attachments(day)
 
     message.send("That's it!")
 
@@ -138,9 +110,6 @@ def add(message, arguments):
     dates = arguments['date-period'].split('/')
     start_date = dates[0]
     end_date = dates[1]
-    readable_start = parse(start_date).strftime("%A, %d %B")
-    readable_end = parse(end_date).strftime("%A, %d %B")
-
 
     # Prevent duplicates
     events = google_calendar.list_range(parse(start_date), parse(end_date))
@@ -150,15 +119,8 @@ def add(message, arguments):
             message.reply("Uh oh, it looks like you're already booked to be on PTO at that time:")
             start = parse(event['start']['date'])
             end = parse(event['end']['date'])
-            readable_start = start.strftime("%A, %d %B")
-            readable_end = end.strftime("%A, %d %B")
-            attatchment = {
-                'fallback': 'Calendar event',
-                'title': event['summary'],
-                'text': 'On PTO from ' + readable_start + ' until they return on ' + readable_end,
-                'color': '#0074D9'
-            }
-            message.send_attatchments([attatchment])
+            attachment = generate_attachment(full_name, "future", start, end)
+            message.send_attachments([attachment])
             message.send("You could delete this PTO or pick another period to book your PTO on.")
             return
 
@@ -176,16 +138,8 @@ def add(message, arguments):
 
     google_calendar.add_event(event)
     message.reply("Done, take a look at what I added:")
-    attatchment = {
-        'fallback': 'Calendar event',
-        'title': event['summary'],
-        'text': 'On PTO from ' + readable_start + ' until they return on ' + readable_end,
-        'color': '#0074D9'
-    }
-    if arguments['reason'] != '':
-        attatchment['footer'] = arguments['reason']
-
-    message.send_attatchments([attatchment])
+    attachment = generate_attachment(full_name, "future", parse(start_date), parse(end_date))
+    message.send_attachments([attachment])
     message.reply("You can tell me to undo this.")
 
     user_id = message.sender_id()
@@ -269,3 +223,32 @@ def undo(message):
                 message.reply("If I got something when making it, you could try again but phrase it differently.")
                 break
     undo_queue.pop(user_id, None)
+
+
+def generate_attachment(name, type, description='', start=None, end=None):
+    attachment = {}
+    attachment["fallback"] = "Calendar event"
+    attachment["title"] = name
+    if description:
+        attachment["footer"] = description
+
+    readable_start = start.strftime("%A, %d %B")
+    readable_end = end.strftime("%A, %d %B")
+
+    if type == "end":
+        attachment["text"] = "Returns from PTO"
+        attachment["color"] = "#2ECC40"
+    elif type == "oneDay":
+        attachment["text"] = "On PTO for one day"
+        attachment["color"] = "#FF851B"
+    elif type == "start":
+        attachment["text"] = "Starts PTO until they return on " + readable_end
+        attachment["color"] = "#FF4136"
+    elif type == "continue":
+        attachment["text"] = "Still on PTO from " + readable_start + " until they return on " + readable_end
+        attachment["color"] = "#0074D9"
+    elif type == "future":
+        attachment["text"] = "On PTO from " + readable_start + " until they return on " + readable_end
+        attachment["color"] = "#0074D9"
+
+    return attachment

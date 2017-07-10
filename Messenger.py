@@ -21,11 +21,11 @@ class Messenger:
         else:
             self.service.send_message(self.channel, message)
 
-    def send_attatchments(self, attatchments):
+    def send_attachments(self, attachments):
         if self.service_type == "Message":
-            self.service.send_webapi('', json.dumps(attatchments))
+            self.service.send_webapi('', json.dumps(attachments))
         else:
-            self.service.send_message(self.channel, '', json.dumps(attatchments))
+            self.service.send_message(self.channel, '', json.dumps(attachments))
 
     def full_name(self):
         if self.service_type == "Message":

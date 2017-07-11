@@ -6,8 +6,8 @@
 #
 
 
-DEFAULT_REPLY = "If you want me to do something, you should tell me what to do."
-ERRORS_TO = "gytdau"
+DEFAULT_REPLY = "Hi! :wave: If you want me to do something, you should tell me what to do."
+ERRORS_TO = "your_slack_username_goes_here" # Don't put an @ sign.
 
 PLUGINS = [
     'slackbot.plugins'
@@ -25,7 +25,7 @@ SEND_TO = "pto" # send the week's calendar at 9am to the channel #pto
 
 # Google Calendar configuration:
 # If modifying these scopes, delete your previously saved credentials
-# located in client_secret.json in this folder 
+# located in client_secret.json in this folder
 SCOPES = 'https://www.googleapis.com/auth/calendar'
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'PTO Thingy'

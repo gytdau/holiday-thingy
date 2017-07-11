@@ -1,6 +1,9 @@
 # Holiday Thingy
 A Slack bot that manages employee PTOs.
 
+I made this during my work experience at Workday.
+
+### Explanation
 _What's a PTO?_
 > Paid time off or personal time off (PTO) is a policy in some employee handbooks that provides a bank of hours in which the employer pools sick days, vacation days, and personal days that allows employees to use as the need or desire arises.
 > - Wikipedia
@@ -19,5 +22,6 @@ python run.py
 Technically, I suppose you could say this repo has tests. You can run them by:
 
 ```
-pytest tests
+cd tests
+pytest
 ```

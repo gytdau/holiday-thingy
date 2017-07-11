@@ -25,19 +25,9 @@ def respond(message, text):
         processed = nlp.query(messenger.sender_id(), text)
         intent = processed["result"]["metadata"]["intentName"]
         arguments = processed["result"]["parameters"]
-        if intent == "failure":
-            commands.failure(messenger)
-        if intent == "list":
-            commands.list(messenger, arguments)
-        if intent == "add":
-            commands.add(messenger, arguments)
-        if intent == "delete":
-            commands.delete(messenger, arguments)
-        if intent == "undo":
-            commands.undo(messenger)
+        execute_intent(intent, messenger, arguments)
     except:
         blocked = False
-        messenger.reply("Well, I seem to have... broke. Sorry about that.")
         raise
 
     blocked = False
@@ -46,23 +36,35 @@ def daily_list():
     """
     Sends a list of the week's tasks to the appropriate channel.
     """
-    global blocked
-
     wait()
-
+    global blocked
     blocked = True
 
     messenger = Messenger(last_client, SEND_TO)
-
     try:
-        commands.list(messenger, {'date': '', 'date-period': ''})
+        execute_intent("list", messenger, {'date': '', 'date-period': ''})
     except:
         blocked = False
         raise
 
     blocked = False
 
+def execute_intent(intent, messenger, arguments):
+    if intent == "failure":
+        commands.failure(messenger)
+    if intent == "list":
+        commands.list(messenger, arguments)
+    if intent == "add":
+        commands.add(messenger, arguments)
+    if intent == "delete":
+        commands.delete(messenger, arguments)
+    if intent == "undo":
+        commands.undo(messenger)
+
 def wait():
+    """
+    If there's a command currently waiting, only return when it's finished.
+    """
     global blocked
     wait_timer = 0
     while blocked:
@@ -82,8 +84,6 @@ def main():
     schedulerThread.start()
     bot = Bot()
     bot.run()
-
-
 
 def run_scheduler():
     """

@@ -2,11 +2,8 @@
 import os, sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
-import nlp
-import mock
-import pytest
+import nlp, mock, pytest, requests
 from pytest_mock import mocker
-import requests
 
 def test_attempts_request(mocker):
     mocker.patch('requests.get')

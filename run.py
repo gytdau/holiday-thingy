@@ -1,18 +1,8 @@
 from slackbot.bot import Bot
 from slackbot.bot import listen_to
 from slackbot.bot import respond_to
-import google_calendar
-import commands
 from slackbot_settings import *
-import json
-import re
-import pdb
-import nlp
-import time
-import schedule
-import threading
-import sys
-import logging
+import json, re, pdb, nlp, time, schedule, threading, sys, logging, google_calendar, commands
 from Messenger import Messenger
 logging.basicConfig()
 
@@ -26,19 +16,13 @@ def respond(message, text):
     """
     messenger = Messenger(message)
 
-    global last_client
+    global last_client, blocked
     last_client = message.channel._client
 
-    global blocked
-    wait_timer = 0
-    while blocked:
-        time.sleep(0.5)
-        wait_timer += 0.5
-        print("Message waiting for " + str(wait_timer) + "s")
-
+    wait()
     blocked = True
     try:
-        processed = nlp.query(messenger.user_id(), text)
+        processed = nlp.query(messenger.sender_id(), text)
         intent = processed["result"]["metadata"]["intentName"]
         arguments = processed["result"]["parameters"]
         if intent == "failure":
@@ -64,11 +48,7 @@ def daily_list():
     """
     global blocked
 
-    wait_timer = 0
-    while blocked:
-        time.sleep(0.5)
-        wait_timer += 0.5
-        print("Message waiting for " + str(wait_timer) + "s")
+    wait()
 
     blocked = True
 
@@ -81,6 +61,14 @@ def daily_list():
         raise
 
     blocked = False
+
+def wait():
+    global blocked
+    wait_timer = 0
+    while blocked:
+        time.sleep(0.5)
+        wait_timer += 0.5
+        print("Message waiting for " + str(wait_timer) + "s")
 
 schedule.every().day.at(SEND_AT).do(daily_list)
 

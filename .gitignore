@@ -6,3 +6,4 @@ client_secret.json
 *.egg-info
 slackbot_settings.py
 credentials.json
+.cache

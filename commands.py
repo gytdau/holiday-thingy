@@ -1,10 +1,7 @@
-import google_calendar
 from datetime import *
 from dateutil.parser import parse # This parser just makes a guess at what format it is in.
 # It could be better for stability to supply the format in advance.
-import json
-import re
-import pdb
+import json, re, pdb, google_calendar
 
 undo_queue = {}
 

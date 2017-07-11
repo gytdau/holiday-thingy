@@ -38,7 +38,7 @@ def respond(message, text):
 
     blocked = True
     try:
-        processed = nlp.query(message, text)
+        processed = nlp.query(messenger.user_id(), text)
         intent = processed["result"]["metadata"]["intentName"]
         arguments = processed["result"]["parameters"]
         if intent == "failure":

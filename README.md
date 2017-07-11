@@ -14,3 +14,10 @@ Run it like this:
 ```
 python run.py
 ```
+
+### Tests
+Technically, I suppose you could say this repo has tests. You can run them by:
+
+```
+pytest tests
+```

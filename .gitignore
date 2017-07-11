@@ -1,9 +1,0 @@
-.git
-py3env
-__pycache__
-client_secret.json
-*.pyc
-*.egg-info
-slackbot_settings.py
-credentials.json
-.cache

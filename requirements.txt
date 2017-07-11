@@ -1,4 +1,6 @@
-# Add your requirements here like:
-# numpy
-# scipy>=0.9
-
+mock
+pytest_mock
+schedule
+httplib2
+google-api-python-client
+oauth2client==3.0.0

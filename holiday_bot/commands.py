@@ -12,13 +12,7 @@ def failure(message):
 
 def list(message, arguments):
 
-    # Defaults and conversions of arguments
-    if arguments['date']:
-        that_day = parse(arguments['date'])
-        arguments['date-period'] = that_day.strftime('%Y-%m-%d') + "/" + (that_day + timedelta(days=1)).strftime('%Y-%m-%d')
-
-    if not arguments['date-period']:
-        arguments['date-period'] = datetime.now().strftime('%Y-%m-%d') + "/" + (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')
+    arguments = convert_dates(arguments, 7)
 
     # Converting the date range into something we understand
 
@@ -29,7 +23,7 @@ def list(message, arguments):
     # Fetching the data
 
     events = google_calendar.list_range(start_date, end_date)
-    #message.reply("Looks like there's no PTOs from " + start_date.strftime("%Y %A, %d %B") + " to " + end_date.strftime("%A, %d %B") + ".")
+
     if len(events) == 0:
         message.reply("Looks like there's no PTOs from " + start_date.strftime("%A, %d %B") + " to " + end_date.strftime("%A, %d %B") + ".")
         return
@@ -96,10 +90,7 @@ def list(message, arguments):
 def add(message, arguments):
     full_name = message.full_name()
 
-    # Defaults and conversions of arguments
-    if arguments['date']:
-        that_day = parse(arguments['date'])
-        arguments['date-period'] = that_day.strftime('%Y-%m-%d') + "/" + (that_day + timedelta(days=1)).strftime('%Y-%m-%d')
+    arguments = convert_dates(arguments)
 
     if not arguments['date-period']:
         message.send("I can't book a PTO for you unless you give me a date or a date period.")
@@ -145,15 +136,8 @@ def add(message, arguments):
 
 def delete(message, arguments):
     full_name = message.full_name()
-    full_name = full_name.lower().strip()
 
-    # Defaults and conversions of arguments
-    if arguments['date']:
-        that_day = parse(arguments['date'])
-        arguments['date-period'] = that_day.strftime('%Y-%m-%d') + "/" + (that_day + timedelta(days=1)).strftime('%Y-%m-%d')
-
-    if not arguments['date-period']:
-        arguments['date-period'] = datetime.now().strftime('%Y-%m-%d') + "/" + (datetime.now() + timedelta(days=365)).strftime('%Y-%m-%d')
+    arguments = convert_dates(arguments, 365)
 
     # Converting the date range into something we understand
 
@@ -168,7 +152,7 @@ def delete(message, arguments):
     deleted = 0
     to_recreate = []
     for event in events:
-        if event['summary'].lower().strip() == full_name:
+        if event['summary'].lower().strip() == full_name.lower().strip():
             google_calendar.delete_event(event['id'])
             to_recreate.append(event)
             deleted += 1
@@ -250,3 +234,17 @@ def generate_attachment(name, type, description='', start=None, end=None):
         attachment["color"] = "#0074D9"
 
     return attachment
+
+
+def convert_dates(arguments, dayOffset=None):
+    if 'date' in arguments and arguments['date']:
+        arguments['date-period'] = date_to_date_period(arguments['date'])
+
+    if dayOffset and 'date-period' in arguments and not arguments['date-period']:
+        arguments['date-period'] = date_to_date_period(datetime.now(), dayOffset)
+
+    return arguments
+
+def date_to_date_period(date, dayOffset=1):
+    that_day = parse(date)
+    return that_day.strftime('%Y-%m-%d') + "/" + (that_day + timedelta(days=dayOffset)).strftime('%Y-%m-%d')

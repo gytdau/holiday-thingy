@@ -40,3 +40,11 @@ docs/api/*
 docs/_build/*
 cover/*
 MANIFEST
+
+# !!!
+# Specific files for credentials
+# !!!
+
+client_secret.json
+slackbot_settings.py
+credentials.json

@@ -1,5 +1,7 @@
 # Holiday Thingy
 [![Build Status](https://travis-ci.org/gytdau/holiday-thingy.svg?branch=master)](https://travis-ci.org/gytdau/holiday-thingy)
+[![Code Climate](https://codeclimate.com/github/gytdau/holiday-thingy/badges/gpa.svg)](https://codeclimate.com/github/gytdau/holiday-thingy)
+[![Issue Count](https://codeclimate.com/github/gytdau/holiday-thingy/badges/issue_count.svg)](https://codeclimate.com/github/gytdau/holiday-thingy)
 
 A Slack bot that manages employee PTOs.
 

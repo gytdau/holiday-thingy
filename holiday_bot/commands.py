@@ -13,19 +13,14 @@ def failure(message):
 def list(message, arguments):
 
     arguments = convert_dates(arguments, 7)
-
-    # Converting the date range into something we understand
-
-    dates = arguments['date-period'].split('/')
-    start_date = parse(dates[0])
-    end_date = parse(dates[1])
+    start_date, end_date = date_period_to_datetime_objects(arguments)
 
     # Fetching the data
 
     events = google_calendar.list_range(start_date, end_date)
 
     if len(events) == 0:
-        message.reply("Looks like there's no PTOs from " + start_date.strftime("%A, %d %B") + " to " + end_date.strftime("%A, %d %B") + ".")
+        message.reply("Looks like there's no PTOs from " + readable_format(start_date) + " to " + readable_format(end_date) + ".")
         return
 
     days_in_range = max(abs((start_date - end_date).days), abs((end_date - start_date).days))
@@ -35,9 +30,6 @@ def list(message, arguments):
     for event in events:
         start = parse(event['start']['date'])
         end = parse(event['end']['date'])
-
-        # It appears that Google Calendar counts end dates to be exclusive, but
-        # it disguises that in web application. (Just keep that in mind.)
 
         now = start_date
 
@@ -69,7 +61,7 @@ def list(message, arguments):
                 attachment = generate_attachment(full_name, "end", description, start, end)
                 days[end_days_offset].append(attachment)
 
-    message.send('Here\'s what\'s scheduled from ' + start_date.strftime("%A, %d %B") + " to " + end_date.strftime("%A, %d %B") + ".")
+    message.send('Here\'s what\'s scheduled from ' + readable_format(start_date) + " to " + readable_format(end_date) + ".")
 
     if continued:
         message.send_attachments(continued)
@@ -78,12 +70,9 @@ def list(message, arguments):
         message.send("Looks like there's no PTOs this week.")
 
     for dayNumber, day in enumerate(days):
-        if not day:
-            continue
-
-        message.send((start_date + timedelta(days=dayNumber)).strftime("%A, %d %B") +":\n")
-
-        message.send_attachments(day)
+        if day:
+            message.send(readable_format(start_date + timedelta(days=dayNumber)) +":\n")
+            message.send_attachments(day)
 
     message.send("That's it!")
 
@@ -96,9 +85,7 @@ def add(message, arguments):
         message.send("I can't book a PTO for you unless you give me a date or a date period.")
         return
 
-    dates = arguments['date-period'].split('/')
-    start_date = dates[0]
-    end_date = dates[1]
+    start_date, end_date = date_period_to_datetime_objects(arguments)
 
     # Prevent duplicates
     events = google_calendar.list_range(parse(start_date), parse(end_date))
@@ -138,34 +125,28 @@ def delete(message, arguments):
     full_name = message.full_name()
 
     arguments = convert_dates(arguments, 365)
-
-    # Converting the date range into something we understand
-
-    dates = arguments['date-period'].split('/')
-    start_date = parse(dates[0])
-    end_date = parse(dates[1])
+    start_date, end_date = date_period_to_datetime_objects(arguments)
 
     # Fetching the data
 
     events = google_calendar.list_range(start_date, end_date)
 
     deleted = 0
-    to_recreate = []
+    undo_queue[user_id] = {'action': 'delete', 'events': []}
     for event in events:
         if event['summary'].lower().strip() == full_name.lower().strip():
             google_calendar.delete_event(event['id'])
-            to_recreate.append(event)
+            undo_queue[user_id]['events'].append(event)
             deleted += 1
 
     if deleted == 0:
-        message.reply("I didn't delete anything because I couldn't find any PTOs from you between " + start_date.strftime("%A, %d %B %Y")  + " to " + end_date.strftime("%A, %d %B %Y"))
+        message.reply("I didn't delete anything because I couldn't find any PTOs from you between " + readable_format(start_date)  + " to " + readable_format(end_date))
         return
 
     message.reply(":wastebasket: Done! I deleted " + str(deleted) + " PTOs from you.")
     message.reply("You can tell me to undo this.")
 
     user_id = message.sender_id()
-    undo_queue[user_id] = {'action': 'delete', 'events': to_recreate}
 
 def undo(message):
     user_id = message.sender_id()
@@ -219,9 +200,6 @@ def generate_attachment(name, type, description, start, end):
     if description:
         attachment["footer"] = description
 
-    readable_start = start.strftime("%A, %d %B")
-    readable_end = end.strftime("%A, %d %B")
-
     if type == "end":
         attachment["text"] = "Returns from PTO"
         attachment["color"] = "#2ECC40"
@@ -229,13 +207,13 @@ def generate_attachment(name, type, description, start, end):
         attachment["text"] = "On PTO for one day"
         attachment["color"] = "#FF851B"
     elif type == "start":
-        attachment["text"] = "Starts PTO until they return on " + readable_end
+        attachment["text"] = "Starts PTO until they return on " + readable_format(end)
         attachment["color"] = "#FF4136"
     elif type == "continue":
-        attachment["text"] = "Still on PTO from " + readable_start + " until they return on " + readable_end
+        attachment["text"] = "Still on PTO from " + readable_format(start) + " until they return on " + readable_format(end)
         attachment["color"] = "#0074D9"
     elif type == "future":
-        attachment["text"] = "On PTO from " + readable_start + " until they return on " + readable_end
+        attachment["text"] = "On PTO from " + readable_format(start) + " until they return on " + readable_format(end)
         attachment["color"] = "#0074D9"
 
     return attachment
@@ -252,4 +230,16 @@ def convert_dates(arguments, dayOffset=None):
 
 def date_to_date_period(date, dayOffset=1):
     that_day = parse(date)
-    return that_day.strftime('%Y-%m-%d') + "/" + (that_day + timedelta(days=dayOffset)).strftime('%Y-%m-%d')
+    return iso_format(that_day) + "/" + iso_format(that_day + timedelta(days=dayOffset))
+
+def date_period_to_datetime_objects(arguments):
+    dates = arguments['date-period'].split('/')
+    start_date = parse(dates[0])
+    end_date = parse(dates[1])
+    return start_date, end_date
+
+def iso_format(date):
+    return date.strftime('%Y-%m-%d')
+
+def readable_format(date):
+    return date.strftime("%A, %d %B")

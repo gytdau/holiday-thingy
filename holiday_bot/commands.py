@@ -108,7 +108,7 @@ def add(message, arguments):
             message.reply("Uh oh, it looks like you're already booked to be on PTO at that time:")
             start = parse(event['start']['date'])
             end = parse(event['end']['date'])
-            attachment = generate_attachment(full_name, "future", start, end)
+            attachment = generate_attachment(full_name, "future", event['description'] if 'description' in event else '', start, end)
             message.send_attachments([attachment])
             message.send("You could delete this PTO or pick another period to book your PTO on.")
             return
@@ -127,7 +127,7 @@ def add(message, arguments):
 
     google_calendar.add_event(event)
     message.reply("Done, take a look at what I added:")
-    attachment = generate_attachment(full_name, "future", parse(start_date), parse(end_date))
+    attachment = generate_attachment(full_name, "future", event['description'] if 'description' in event else '', parse(end_date))
     message.send_attachments([attachment])
     message.reply("You can tell me to undo this.")
 
@@ -177,37 +177,42 @@ def undo(message):
 
     to_undo = undo_queue[user_id]
     if to_undo['action'] == 'delete':
-        for event in to_undo['events']:
-            new_event = {
-                'summary': event['summary'],
-                'start': event['start'],
-                'end': event['end']
-            }
-            if 'description' in event:
-                new_event['description'] = event['description']
-            google_calendar.add_event(new_event)
-        if len(to_undo['events']) == 1:
-            message.reply("Undone! I added the PTO back.")
-        else:
-            message.reply("Undone! I added " + str(len(to_undo['events'])) + " PTOs back.")
-
+        undo_delete(to_undo, message)
 
     if to_undo['action'] == 'add':
-        event = to_undo['event']
-        start_date = parse(event['start']['date'])
-        end_date = parse(event['end']['date'])
-        events = google_calendar.list_range(start_date, end_date)
+        undo_add(to_undo, message)
 
-        for event in events:
-            if event['summary'].lower().strip() == full_name:
-                google_calendar.delete_event(event['id'])
-                message.reply("Undone! I deleted that PTO.")
-                message.reply("If I got something when making it, you could try again but phrase it differently.")
-                break
     undo_queue.pop(user_id, None)
 
+def undo_delete(to_undo, message):
+    for event in to_undo['events']:
+        new_event = {
+            'summary': event['summary'],
+            'start': event['start'],
+            'end': event['end']
+        }
+        if 'description' in event:
+            new_event['description'] = event['description']
+        google_calendar.add_event(new_event)
+    if len(to_undo['events']) == 1:
+        message.reply("Undone! I added the PTO back.")
+    else:
+        message.reply("Undone! I added " + str(len(to_undo['events'])) + " PTOs back.")
 
-def generate_attachment(name, type, description='', start=None, end=None):
+def undo_add(to_undo, message):
+    event = to_undo['event']
+    start_date = parse(event['start']['date'])
+    end_date = parse(event['end']['date'])
+    events = google_calendar.list_range(start_date, end_date)
+
+    for event in events:
+        if event['summary'].lower().strip() == full_name:
+            google_calendar.delete_event(event['id'])
+            message.reply("Undone! I deleted that PTO.")
+            message.reply("If I got something wrong when making it, you could try again but phrase it differently.")
+            break
+
+def generate_attachment(name, type, description, start, end):
     attachment = {}
     attachment["fallback"] = "Calendar event"
     attachment["title"] = name

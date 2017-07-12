@@ -1,4 +1,6 @@
 # Holiday Thingy
+[![Build Status](https://travis-ci.org/gytdau/holiday-thingy.svg?branch=master)](https://travis-ci.org/gytdau/holiday-thingy)
+
 A Slack bot that manages employee PTOs.
 
 I made this during my work experience at Workday.

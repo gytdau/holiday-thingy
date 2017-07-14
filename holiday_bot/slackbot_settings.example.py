@@ -35,4 +35,5 @@ CLIENT_SECRET_FILE = 'client_secret.json'
 # client_secret.json is a JSON file you download from Google.
 # Follow Step 1. of this guide to do so:
 # https://developers.google.com/google-apps/calendar/quickstart/python
+# Put it in this folder, holiday_bot/client_secret.json
 APPLICATION_NAME = 'PTO Thingy'

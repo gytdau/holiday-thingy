@@ -24,6 +24,7 @@ Before you run it, you should install the code (including your configuration):
 python setup.py install
 ```
 
+Whenever you change your configuration, you'll have to install the code again.
 And then run it like this:
 ```
 python holiday_bot/run.py

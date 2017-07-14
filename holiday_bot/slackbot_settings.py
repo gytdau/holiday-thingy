@@ -8,7 +8,7 @@ PLUGINS = [
 API_AI_KEY = "7f58e637827b4131bc2b87e028847e29"
 API_TOKEN = "xoxb-207907785414-SH4RxWTwXAbSSk4AWGUHDPQH"
 
-GOOGLE_CALENDAR_ID="63gg37k285nrsnji4000u1stck@group.calendar.google.com" # Look up how to find the Google Calendar ID of a specific calendar.
+GOOGLE_CALENDAR_ID="marinocollege.ie_ns3vmonfsk4toq7jedapkc35b0@group.calendar.google.com" # Look up how to find the Google Calendar ID of a specific calendar.
 
 
 # Small inconsequential note: the bot needs to first be messaged after it starts

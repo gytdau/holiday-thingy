@@ -51,12 +51,12 @@ def list_range(min, max):
     min = min.isoformat() + 'Z' # 'Z' indicates UTC time
     max = max.isoformat() + 'Z'
     events_result = service.events().list(
-        calendarId='primary', timeMin=min, timeMax=max, maxResults=1000, singleEvents=True,
+        calendarId=GOOGLE_CALENDAR_ID, timeMin=min, timeMax=max, maxResults=1000, singleEvents=True,
         orderBy='startTime').execute()
     return events_result.get('items', [])
 
 def add_event(event):
-    service.events().insert(calendarId='primary', body=event).execute()
+    service.events().insert(calendarId=GOOGLE_CALENDAR_ID, body=event).execute()
 
 def delete_event(event_id):
-    service.events().delete(calendarId='primary', eventId=event_id).execute()
+    service.events().delete(calendarId=GOOGLE_CALENDAR_ID, eventId=event_id).execute()

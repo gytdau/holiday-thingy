@@ -24,6 +24,7 @@ def respond(message, text):
     blocked = True
     try:
         processed = nlp.query(messenger.sender_id(), text)
+        print(processed)
         intent = processed["result"]["metadata"]["intentName"]
         arguments = processed["result"]["parameters"]
         execute_intent(intent, messenger, arguments)

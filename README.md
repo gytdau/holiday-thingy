@@ -19,7 +19,12 @@ This project is under the MIT license.
 ### Getting the thing running
 Create a Slack integration (a bot user) on your team, and an api.ai account. Put those keys in `holiday_bot/slackbot_settings.py`.
 
-Run it like this:
+Before you run it, you should install the code (including your configuration):
+```
+python setup.py install
+```
+
+And then run it like this:
 ```
 python holiday_bot/run.py
 ```

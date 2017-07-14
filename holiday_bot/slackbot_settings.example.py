@@ -13,8 +13,10 @@ PLUGINS = [
     'slackbot.plugins'
 ]
 
-API_AI_KEY = "api.ai key"
+API_AI_KEY = "api.ai client access token"
 API_TOKEN = "slack integration api key"
+
+GOOGLE_CALENDAR_ID="something@group.calendar.google" # Look up how to find the Google Calendar ID of a specific calendar.
 
 # Small inconsequential note: the bot needs to first be messaged after it starts
 # before it can send the daily list. Anyone can message it, and they don't

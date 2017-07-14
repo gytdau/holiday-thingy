@@ -67,7 +67,7 @@ def list(message, arguments):
         message.send_attachments(continued)
 
     if not days:
-        message.send("Looks like there's no PTOs this week.")
+        message.send("It looks like there's no PTOs from " + readable_format(start_date) + " to " + readable_format(end_date) + ".")
 
     for dayNumber, day in enumerate(days):
         if day:
@@ -88,7 +88,7 @@ def add(message, arguments):
     start_date, end_date = date_period_to_datetime_objects(arguments)
 
     # Prevent duplicates
-    events = google_calendar.list_range(parse(start_date), parse(end_date))
+    events = google_calendar.list_range(start_date, end_date)
 
     for event in events:
         if event['summary'].lower().strip() == full_name.lower().strip():
@@ -105,16 +105,16 @@ def add(message, arguments):
       'summary': full_name,
       'description': arguments['reason'],
       'start': {
-        'date': start_date
+        'date': iso_format(start_date)
       },
       'end': {
-        'date': end_date
+        'date': iso_format(end_date)
       }
     }
 
     google_calendar.add_event(event)
     message.reply("Done, take a look at what I added:")
-    attachment = generate_attachment(full_name, "future", event['description'] if 'description' in event else '', parse(end_date))
+    attachment = generate_attachment(full_name, "future", event['description'] if 'description' in event else '', start_date, end_date)
     message.send_attachments([attachment])
     message.reply("You can tell me to undo this.")
 
@@ -123,6 +123,7 @@ def add(message, arguments):
 
 def delete(message, arguments):
     full_name = message.full_name()
+    user_id = message.sender_id()
 
     arguments = convert_dates(arguments, 365)
     start_date, end_date = date_period_to_datetime_objects(arguments)
@@ -181,13 +182,14 @@ def undo_delete(to_undo, message):
         message.reply("Undone! I added " + str(len(to_undo['events'])) + " PTOs back.")
 
 def undo_add(to_undo, message):
-    event = to_undo['event']
-    start_date = parse(event['start']['date'])
-    end_date = parse(event['end']['date'])
+    full_name = message.full_name()
+    event_to_undo = to_undo['event']
+    start_date = parse(event_to_undo['start']['date'])
+    end_date = parse(event_to_undo['end']['date'])
     events = google_calendar.list_range(start_date, end_date)
 
     for event in events:
-        if event['summary'].lower().strip() == full_name:
+        if event['summary'] == event_to_undo['summary']:
             google_calendar.delete_event(event['id'])
             message.reply("Undone! I deleted that PTO.")
             message.reply("If I got something wrong when making it, you could try again but phrase it differently.")
@@ -229,7 +231,10 @@ def convert_dates(arguments, dayOffset=None):
     return arguments
 
 def date_to_date_period(date, dayOffset=1):
-    that_day = parse(date)
+    if type(date) == str:
+        that_day = parse(date)
+    else:
+        that_day = date
     return iso_format(that_day) + "/" + iso_format(that_day + timedelta(days=dayOffset))
 
 def date_period_to_datetime_objects(arguments):

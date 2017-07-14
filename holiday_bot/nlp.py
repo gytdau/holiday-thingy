@@ -7,7 +7,7 @@ def query(user_id, text):
         'v': 20150910, # API version
         'query': text,
         'lang': 'en',
-        'sessionId': user_id
+        'sessionId': 'sass'
     }
     headers = {
       'Authorization': 'Bearer ' + API_AI_KEY
